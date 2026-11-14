@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moto Ya Sausal – Pide tu moto</title>
+<style>
+:root{--bg:#faf7fa;--card:#fff;--tx:#241828;--mu:#6e6272;--pr:#c2187a;--go:#d4a017;--si:#e4e0e6;--ok:#1f8a4c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#18101c;--card:#241a29;--tx:#f4eef6;--mu:#a99bb0;--si:#3a2d40;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#18101c;--card:#241a29;--tx:#f4eef6;--mu:#a99bb0;--si:#3a2d40;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+header{background:linear-gradient(135deg,var(--pr),#8e0f58);color:#fff;border-radius:16px;padding:18px;margin-bottom:14px;border-bottom:4px solid var(--go)}
+header h1{margin:0;font-size:20px}header p{margin:4px 0 0;font-size:13px;opacity:.9}
+.card{background:var(--card);border:1px solid var(--si);border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:600;color:var(--mu);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+label:first-child{margin-top:0}
+select,input{width:100%;padding:12px;border:1px solid var(--si);border-radius:10px;background:var(--bg);color:var(--tx);font-size:16px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;background:var(--pr);color:#fff}
+button.sec{background:var(--si);color:var(--tx)}
+button.gold{background:var(--go);color:#241828}
+button:disabled{opacity:.5}
+.gps{font-size:13px;margin-top:6px;background:none;color:var(--pr);padding:6px 0;text-align:left;width:auto}
+.fare{text-align:center}.fare b{font-size:34px;color:var(--pr);display:block}
+.fare small{color:var(--mu)}
+.hide{display:none}
+.radar{width:90px;height:90px;border-radius:50%;margin:10px auto;background:radial-gradient(circle,var(--pr) 0 18%,transparent 20%);border:3px solid var(--pr);animation:p 1.2s infinite}
+@keyframes p{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.3);opacity:0}}
+.c{text-align:center}
+.trip{font-size:13px;padding:8px 0;border-top:1px solid var(--si);color:var(--mu)}
+.badge{display:inline-block;background:var(--ok);color:#fff;border-radius:99px;padding:2px 10px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🛵 Moto Ya Sausal</h1><p>Sausal, Alto Peru y Alrededores · Pide tu moto en 3 toques</p></header>
+
+<section id="s1" class="card">
+<label>¿Dónde te recojo?</label>
+<select id="from"></select>
+<button class="gps" id="gps" type="button">📍 Usar mi ubicación actual</button>
+<div id="mapBox" class="hide"><iframe id="map" title="Mapa de tu ubicación" loading="lazy" style="width:100%;height:220px;border:0;border-radius:10px;margin-top:6px"></iframe><small style="color:var(--mu)">Este es tu punto de recojo. Si no es correcto, vuelve a tocar el botón.</small></div>
+<label>¿A dónde vas?</label>
+<select id="to"></select>
+<div class="row">
+<div><label>Pasajeros</label><select id="pax"><option>1</option><option>2</option><option>3</option></select></div>
+<div><label>Nombre</label><input id="name" placeholder="Tu nombre" autocomplete="name"></div>
+</div>
+<label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:14px;color:var(--tx)"><input type="checkbox" id="lug" style="width:20px;height:20px"> Llevo equipaje de 50 kg o más (cuenta como 1 pasajero adicional)</label>
+<label>Conductor</label>
+<select id="drv"></select>
+<label>Referencia (opcional)</label>
+<input id="ref" placeholder="Ej: casa azul, frente a la bodega">
+</section>
+
+<section id="fareBox" class="card fare hide">
+<small>Tarifa de tu ruta</small><b id="price">S/ 0</b>
+<small id="detail"></small>
+<div style="margin-top:12px"><button id="req">Pedir mototaxi</button></div>
+</section>
+
+<section id="s2" class="card c hide">
+<div class="radar"></div>
+<h3 id="stTitle">Buscando conductor…</h3>
+<p id="stTxt" style="color:var(--mu);font-size:14px"></p>
+<button id="wa" class="gold hide">Confirmar por WhatsApp</button>
+<div style="height:8px"></div>
+<button id="cancel" class="sec">Cancelar</button>
+</section>
+
+<section class="card"><div class="row"><button class="sec" id="call">📞 Llamar</button><button class="sec" id="share">📤 Compartir app</button></div></section>
+
+<section class="card">
+<b style="font-size:14px">Tus últimos viajes</b>
+<div id="hist"><div class="trip">Aún no tienes viajes.</div></div>
+</section>
+<p class="c" style="font-size:12px;color:var(--mu)">🎁 6 sellos = 7° viaje gratis · Tarifas fijas por ruta</p>
+</div>
+
+<script>
+// ====== CONFIGURA AQUÍ ======
+const CONDUCTORES = [            // agrega una línea por cada conductor (teléfono con 51)
+  {n:"Luis Chuso", tel:"51952328431"},
+  {n:"Darwin Mayta", tel:"51938763822"}
+];
+// Cada ruta: [lugar A, lugar B, pasaje único S/, pasajero adicional S/]  (vale en ambos sentidos)
+const RUTAS = [
+  // RUTAS INTERNAS
+  ["Sausal Pueblo","Sector El Tráfico",2,0.5],
+  ["Sausal Pueblo","Alto Perú",2,0.5],
+  ["Sausal Pueblo","Sector Vivero",2,0.5],
+  ["Sausal Pueblo","Sector Tiro Blanco",2,0.5],
+  ["Sausal Pueblo","Sector El Estadio",2,0.5],
+  ["Sector El Tráfico","Sector Vivero",3,1],
+  ["Sector El Tráfico","Sector Tiro Blanco",3,1],
+  ["Sector El Tráfico","Alto Perú",3,1],
+  // RUTAS EXTERNAS
+  ["Sausal Pueblo","Quemazón",5,1],
+  ["Sausal Pueblo","Puente Tabla",7,1],
+  ["Sausal Pueblo","Piedra Molino",9,1],
+  ["Sausal Pueblo","La Mónica 1",6,1],
+  ["Sausal Pueblo","La Mónica 2",7,1],
+  ["Sausal Pueblo","Granja 1 La Mónica",10,2],
+  ["Sausal Pueblo","Granja 2 La Mónica",15,2],
+  ["Sausal Pueblo","Sector Voladero",5,1],
+  ["Sausal Pueblo","Sector Microalgas",4,1],
+  ["Sausal Pueblo","Sector El Mango Enrocado",6,1]
+];
+// Equipaje de 50 kg o más = 1 pasajero adicional
+// =============================
+const $=id=>document.getElementById(id);
+let gpsLink="", trip=null, timer=null;
+const LUGARES=[...new Set(RUTAS.flatMap(r=>[r[0],r[1]]))];
+const opts=LUGARES.map(n=>`<option value="${n}">${n}</option>`).join("");
+const money=v=>"S/ "+Number(v).toFixed(2);
+$("drv").innerHTML='<option value="any">Cualquiera disponible</option>'+CONDUCTORES.map((c,i)=>`<option value="${i}">${c.n}</option>`).join("");
+$("from").innerHTML=opts; $("to").innerHTML=opts; $("from").value="Sausal Pueblo"; $("to").value="Sector El Tráfico";
+
+function ruta(a,b){return RUTAS.find(r=>(r[0]===a&&r[1]===b)||(r[0]===b&&r[1]===a))}
+function calc(){
+  const a=$("from").value,b=$("to").value,px=+$("pax").value,eq=$("lug").checked,r=ruta(a,b);
+  const adic=(px-1)+(eq?1:0);
+  $("fareBox").classList.toggle("hide",a===b);
+  if(!r){$("price").textContent="Por confirmar";$("detail").textContent="Esta ruta no tiene tarifa fija. El conductor te confirmará el precio.";return null}
+  const p=r[2]+adic*r[3];
+  $("price").textContent=money(p);
+  $("detail").textContent="Pasaje único "+money(r[2])+(adic?" + "+adic+" adicional(es) × "+money(r[3]):"");
+  return p;
+}
+function driver(){const v=$("drv").value;return v==="any"?CONDUCTORES[Math.floor(Math.random()*CONDUCTORES.length)]:CONDUCTORES[+v]}
+["from","to","pax","drv","lug"].forEach(i=>$(i).addEventListener("change",calc));
+calc();
+
+$("gps").onclick=()=>{
+  if(!navigator.geolocation){alert("Tu dispositivo no permite ubicación.");return}
+  $("gps").textContent="Buscando ubicación…";
+  navigator.geolocation.getCurrentPosition(p=>{
+    gpsLink=`https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`;
+    $("gps").textContent="✅ Ubicación lista (se enviará al conductor)";calc();
+    const la=p.coords.latitude,lo=p.coords.longitude,d=0.004;
+    $("map").src=`https://www.openstreetmap.org/export/embed.html?bbox=${lo-d},${la-d},${lo+d},${la+d}&layer=mapnik&marker=${la},${lo}`;
+    $("mapBox").classList.remove("hide");
+  },()=>{$("gps").textContent="📍 No se pudo obtener. Elige tu punto en la lista."},{timeout:8000});
+};
+
+$("req").onclick=()=>{
+  const price=calc();
+  trip={drv:driver(),from:$("from").value,to:$("to").value,price,eq:$("lug").checked,
+    pax:$("pax").value,name:$("name").value.trim()||"Cliente",ref:$("ref").value.trim(),
+    date:new Date().toLocaleString("es-PE",{dateStyle:"short",timeStyle:"short"})};
+  $("s1").classList.add("hide");$("fareBox").classList.add("hide");$("s2").classList.remove("hide");
+  $("wa").classList.add("hide");$("stTitle").textContent="Buscando conductor…";
+  $("stTxt").textContent="Conectando con Moto Ya Sausal";
+  timer=setTimeout(()=>{
+    $("stTitle").innerHTML='<span class="badge">Conductor disponible</span>';
+    $("stTxt").textContent=trip.drv.n+" está listo. Confirma tu pedido por WhatsApp.";
+    $("wa").classList.remove("hide");
+  },2200);
+};
+
+$("wa").onclick=()=>{
+  const t=trip;
+  const msg=`🛵 *Pedido Moto Ya Sausal*\nNombre: ${t.name}\nRecojo: ${t.from}${gpsLink?"\nUbicación: "+gpsLink:""}\nDestino: ${t.to}\nPasajeros: ${t.pax}${t.eq?"\nEquipaje: 50 kg o más":""}${t.ref?"\nReferencia: "+t.ref:""}\nTarifa: ${t.price==null?"por confirmar":money(t.price)}\nConductor: ${t.drv.n}`;
+  window.open(`https://wa.me/${t.drv.tel}?text=${encodeURIComponent(msg)}`,"_blank");
+  save(t);reset();
+};
+$("cancel").onclick=reset;
+function reset(){clearTimeout(timer);$("s2").classList.add("hide");$("s1").classList.remove("hide");calc();}
+
+$("call").onclick=()=>{const v=$("drv").value;location.href="tel:+"+(v==="any"?CONDUCTORES[0]:CONDUCTORES[+v]).tel};
+$("share").onclick=()=>{const u=location.href.split("#")[0],t="🛵 Moto Ya Sausal: pide tu mototaxi en Sausal y Alto Perú desde el celular:";
+  if(navigator.share){navigator.share({title:"Moto Ya Sausal",text:t,url:u}).catch(()=>{})}
+  else window.open("https://wa.me/?text="+encodeURIComponent(t+" "+u),"_blank")};
+function save(t){try{const h=JSON.parse(localStorage.getItem("myas_h")||"[]");h.unshift({date:t.date,from:t.from,to:t.to,price:t.price});localStorage.setItem("myas_h",JSON.stringify(h.slice(0,5)));}catch(e){}show();}
+function show(){
+  let h=[];try{h=JSON.parse(localStorage.getItem("myas_h")||"[]")}catch(e){}
+  if(!h.length)return;
+  $("hist").innerHTML=h.map(t=>`<div class="trip">${t.date} · ${t.from} → ${t.to} · <b>${t.price==null?"por confirmar":money(t.price)}</b></div>`).join("");
+}
+show();
+</script>
+</body>
+</html>
